@@ -8,6 +8,7 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -197,5 +198,21 @@ public class TaskControllerTests {
                     }
                     """))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleteTask_taskExists_shouldReturnNoContent() throws Exception {
+        when(taskService.deleteTask(1L)).thenReturn(true);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/tasks/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deleteTask_taskDoesNotExist_shouldReturnNotFound() throws Exception {
+        when(taskService.deleteTask(1L)).thenReturn(false);
+
+        mockMvc.perform(MockMvcRequestBuilders.delete("/api/tasks/1"))
+                .andExpect(status().isNotFound());
     }
 }

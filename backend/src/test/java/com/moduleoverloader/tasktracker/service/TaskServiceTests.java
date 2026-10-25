@@ -17,10 +17,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.moduleoverloader.tasktracker.enums.TaskStatus.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class TaskServiceTests {
@@ -78,5 +77,25 @@ class TaskServiceTests {
         assertEquals(COMPLETED, taskToSave.getStatus());
         assertEquals(OCTOBER_2026, taskToSave.getDeadline());
         assertEquals(new TaskResponse(1L, "New task", "New task description", COMPLETED, OCTOBER_2026), response);
+    }
+
+    @Test
+    void deleteTask_existingTask_returnsTrue() {
+        when(taskRepository.existsById(1L)).thenReturn(true);
+
+        boolean result = taskService.deleteTask(1L);
+
+        assertTrue(result);
+        verify(taskRepository).deleteById(1L);
+    }
+
+    @Test
+    void deleteTask_nonExistingTask_returnsFalse() {
+        when(taskRepository.existsById(1L)).thenReturn(false);
+
+        boolean result = taskService.deleteTask(1L);
+
+        assertFalse(result);
+        verify(taskRepository, never()).deleteById(1L);
     }
 }

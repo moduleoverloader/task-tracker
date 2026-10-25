@@ -50,4 +50,13 @@ public class TaskService {
                 task.getDeadline()
         );
     }
+
+    public boolean deleteTask(Long id) {
+        if (taskRepository.existsById(id)) {
+            taskRepository.deleteById(id);
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
