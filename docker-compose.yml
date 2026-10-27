@@ -14,6 +14,24 @@ services:
 
     volumes:
       - task_tracker_database_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U task_tracker_db_user -d task_tracker_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/task_tracker_db
+      SPRING_DATASOURCE_USERNAME: task_tracker_db_user
+      SPRING_DATASOURCE_PASSWORD: task_tracker_db_password
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   task_tracker_database_data:

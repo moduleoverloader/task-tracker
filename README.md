@@ -16,8 +16,7 @@ DTS Developer Technical Test Submission
 # Startup instructions
 
 1. Ensure Docker Desktop is running
-2. Navigate to root of project and run `docker compose up -d`
-3. Run main method in `TaskTrackerBackendApplication` class to start the application
+2. Navigate to root of project and run `docker compose up --build`
 
 ---
 
