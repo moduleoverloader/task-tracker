@@ -1,5 +1,6 @@
 package com.moduleoverloader.tasktracker.controller;
 
+import com.moduleoverloader.tasktracker.dto.CreateTaskRequest;
 import com.moduleoverloader.tasktracker.dto.TaskResponse;
 import com.moduleoverloader.tasktracker.service.TaskService;
 import org.junit.jupiter.api.Test;
@@ -14,13 +15,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
-import static com.moduleoverloader.tasktracker.enums.TaskStatus.*;
+import static com.moduleoverloader.tasktracker.enums.TaskStatus.IN_PROGRESS;
+import static com.moduleoverloader.tasktracker.enums.TaskStatus.TODO;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(TaskController.class)
 public class TaskControllerTests {
@@ -48,6 +50,7 @@ public class TaskControllerTests {
                 .andExpect(jsonPath("$.description").value("First task description"))
                 .andExpect(jsonPath("$.status").value(TODO.name()))
                 .andExpect(jsonPath("$.deadline").value("2026-10-01T09:00:00"));
+        verify(taskService).getTaskById(1L);
     }
 
     @Test
@@ -57,10 +60,11 @@ public class TaskControllerTests {
 
         mockMvc.perform(get("/api/tasks/1"))
                 .andExpect(status().isNotFound());
+        verify(taskService).getTaskById(1L);
     }
 
     @Test
-    void getAllTasks_twoTasks_shouldReturnAllTasks() throws Exception {
+    void getAllTasks_twoTasksExist_shouldReturnAllTasks() throws Exception {
         List<TaskResponse> response = List.of(
                 new TaskResponse(1L, "First task", "First task description",  TODO, OCTOBER_2026),
                 new TaskResponse(2L, "Second task", "Second task description",  IN_PROGRESS, NOVEMBER_2026)
@@ -82,20 +86,22 @@ public class TaskControllerTests {
                 .andExpect(jsonPath("$[1].description").value("Second task description"))
                 .andExpect(jsonPath("$[1].status").value(IN_PROGRESS.name()))
                 .andExpect(jsonPath("$[1].deadline").value("2026-11-01T09:00:00"));
+        verify(taskService).getAllTasks();
     }
 
     @Test
-    void getAllTasks_noTasks_shouldReturnEmptyList() throws Exception {
+    void getAllTasks_noTasksExist_shouldReturnEmptyListOfTasks() throws Exception {
         when(taskService.getAllTasks())
                 .thenReturn(List.of());
 
         mockMvc.perform(get("/api/tasks"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
+        verify(taskService).getAllTasks();
     }
 
     @Test
-    void createTask_validRequest_shouldReturnCreatedTask() throws Exception {
+    void createTask_validRequest_shouldCreateTaskAndReturnIt() throws Exception {
         TaskResponse response = new TaskResponse(1L, "New task", "New task description", TODO, OCTOBER_2026);
 
         when(taskService.createTask(any()))
@@ -111,16 +117,18 @@ public class TaskControllerTests {
                       "deadline": "2026-10-01T09:00:00"
                     }
                     """))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.id").value(1))
-        .andExpect(jsonPath("$.title").value("New task"))
-        .andExpect(jsonPath("$.description").value("New task description"))
-        .andExpect(jsonPath("$.status").value("TODO"))
-        .andExpect(jsonPath("$.deadline").value("2026-10-01T09:00:00"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.title").value("New task"))
+                .andExpect(jsonPath("$.description").value("New task description"))
+                .andExpect(jsonPath("$.status").value("TODO"))
+                .andExpect(jsonPath("$.deadline").value("2026-10-01T09:00:00"));
+        CreateTaskRequest expectedRequest = new CreateTaskRequest("New task", "New task description", TODO, OCTOBER_2026);
+        verify(taskService).createTask(expectedRequest);
     }
 
     @Test
-    void createTask_missingDescription_shouldReturnCreatedTask() throws Exception {
+    void createTask_missingDescription_shouldCreateTaskAndReturnIt() throws Exception {
         TaskResponse response = new TaskResponse(1L, "New task", null, TODO, OCTOBER_2026);
 
         when(taskService.createTask(any()))
@@ -141,6 +149,8 @@ public class TaskControllerTests {
                 .andExpect(jsonPath("$.description").doesNotExist())
                 .andExpect(jsonPath("$.status").value("TODO"))
                 .andExpect(jsonPath("$.deadline").value("2026-10-01T09:00:00"));
+        CreateTaskRequest expectedRequest = new CreateTaskRequest("New task", null, TODO, OCTOBER_2026);
+        verify(taskService).createTask(expectedRequest);
     }
 
     @Test
@@ -155,6 +165,7 @@ public class TaskControllerTests {
                     }
                     """))
                 .andExpect(status().isBadRequest());
+        verifyNoInteractions(taskService);
     }
 
     @Test
@@ -170,6 +181,7 @@ public class TaskControllerTests {
                     }
                     """))
                 .andExpect(status().isBadRequest());
+        verifyNoInteractions(taskService);
     }
 
     @Test
@@ -184,6 +196,7 @@ public class TaskControllerTests {
                     }
                     """))
                 .andExpect(status().isBadRequest());
+        verifyNoInteractions(taskService);
     }
 
     @Test
@@ -198,14 +211,16 @@ public class TaskControllerTests {
                     }
                     """))
                 .andExpect(status().isBadRequest());
+        verifyNoInteractions(taskService);
     }
 
     @Test
-    void deleteTask_taskExists_shouldReturnNoContent() throws Exception {
+    void deleteTask_taskExists_shouldDeleteTaskAndReturnNoContent() throws Exception {
         when(taskService.deleteTask(1L)).thenReturn(true);
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/tasks/1"))
                 .andExpect(status().isNoContent());
+        verify(taskService).deleteTask(1L);
     }
 
     @Test
@@ -214,5 +229,67 @@ public class TaskControllerTests {
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/api/tasks/1"))
                 .andExpect(status().isNotFound());
+        verify(taskService).deleteTask(1L);
+    }
+
+    @Test
+    void updateTaskStatus_taskExistsAndStatusValid_shouldUpdateTaskAndReturnIt() throws Exception {
+        TaskResponse response = new TaskResponse(1L, "First task", "First task description", IN_PROGRESS, OCTOBER_2026);
+
+        when(taskService.updateTaskStatus(1L, IN_PROGRESS))
+                .thenReturn(Optional.of(response));
+
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/tasks/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "status": "IN_PROGRESS"
+                    }
+                    """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.title").value("First task"))
+                .andExpect(jsonPath("$.description").value("First task description"))
+                .andExpect(jsonPath("$.status").value("IN_PROGRESS"))
+                .andExpect(jsonPath("$.deadline").value("2026-10-01T09:00:00"));
+        verify(taskService).updateTaskStatus(1L, IN_PROGRESS);
+    }
+
+    @Test
+    void updateTaskStatus_taskDoesNotExist_shouldReturnNotFound() throws Exception {
+        when(taskService.updateTaskStatus(1L, IN_PROGRESS))
+            .thenReturn(Optional.empty());
+
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/tasks/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "status": "IN_PROGRESS"
+                    }
+                    """))
+                .andExpect(status().isNotFound());
+        verify(taskService).updateTaskStatus(1L, IN_PROGRESS);
+    }
+
+    @Test
+    void updateTaskStatus_missingStatus_shouldReturnBadRequest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/tasks/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(taskService);
+    }
+
+    @Test
+    void updateTaskStatus_invalidStatus_shouldReturnBadRequest() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.patch("/api/tasks/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "status": "INVALID"
+                    }
+                    """))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(taskService);
     }
 }

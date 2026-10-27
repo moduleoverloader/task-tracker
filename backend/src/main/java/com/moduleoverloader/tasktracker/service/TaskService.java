@@ -3,6 +3,7 @@ package com.moduleoverloader.tasktracker.service;
 import com.moduleoverloader.tasktracker.dto.CreateTaskRequest;
 import com.moduleoverloader.tasktracker.dto.TaskResponse;
 import com.moduleoverloader.tasktracker.entity.Task;
+import com.moduleoverloader.tasktracker.enums.TaskStatus;
 import com.moduleoverloader.tasktracker.repository.TaskRepository;
 import org.springframework.stereotype.Service;
 
@@ -20,13 +21,13 @@ public class TaskService {
 
     public List<TaskResponse> getAllTasks() {
         return taskRepository.findAll().stream()
-                .map(this::toTaskResponse)
+                .map(TaskResponse::fromTaskEntity)
                 .toList();
     }
 
     public Optional<TaskResponse> getTaskById(Long id) {
         return taskRepository.findById(id)
-                .map(this::toTaskResponse);
+                .map(TaskResponse::fromTaskEntity);
     }
 
     public TaskResponse createTask(CreateTaskRequest request) {
@@ -38,17 +39,7 @@ public class TaskService {
 
         Task savedTask = taskRepository.save(task);
 
-        return this.toTaskResponse(savedTask);
-    }
-
-    private TaskResponse toTaskResponse(Task task) {
-        return new TaskResponse(
-                task.getId(),
-                task.getTitle(),
-                task.getDescription(),
-                task.getStatus(),
-                task.getDeadline()
-        );
+        return TaskResponse.fromTaskEntity(savedTask);
     }
 
     public boolean deleteTask(Long id) {
@@ -58,5 +49,14 @@ public class TaskService {
         } else {
             return false;
         }
+    }
+
+    public Optional<TaskResponse> updateTaskStatus(Long id, TaskStatus status) {
+        return taskRepository.findById(id)
+                .map(task -> {
+                    task.setStatus(status);
+                    return taskRepository.save(task);
+                })
+                .map(TaskResponse::fromTaskEntity);
     }
 }

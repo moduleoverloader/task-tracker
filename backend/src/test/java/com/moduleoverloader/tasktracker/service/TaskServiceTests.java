@@ -3,7 +3,6 @@ package com.moduleoverloader.tasktracker.service;
 import com.moduleoverloader.tasktracker.dto.CreateTaskRequest;
 import com.moduleoverloader.tasktracker.dto.TaskResponse;
 import com.moduleoverloader.tasktracker.entity.Task;
-import com.moduleoverloader.tasktracker.enums.TaskStatus;
 import com.moduleoverloader.tasktracker.repository.TaskRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,40 +33,58 @@ class TaskServiceTests {
     private static final LocalDateTime NOVEMBER_2026 = LocalDateTime.of(2026, 11, 1, 9, 0);
 
     @Test
-    void getAllTasks_mapsTasksToTaskResponses() {
+    void getAllTasks_tasksExist_mapsTasksToTaskResponses() {
         when(taskRepository.findAll()).thenReturn(List.of(
                 new Task(1L, "First task", "First description", TODO, OCTOBER_2026),
-                new Task(2L, "Second task", "Second description", TaskStatus.IN_PROGRESS, NOVEMBER_2026)
+                new Task(2L, "Second task", "Second description", IN_PROGRESS, NOVEMBER_2026)
         ));
-
-        List<TaskResponse> responses = taskService.getAllTasks();
-
-        assertEquals(List.of(
+        List<TaskResponse> expectedResponses = List.of(
                 new TaskResponse(1L, "First task", "First description", TODO, OCTOBER_2026),
-                new TaskResponse(2L, "Second task", "Second description", TaskStatus.IN_PROGRESS, NOVEMBER_2026)
-        ), responses);
+                new TaskResponse(2L, "Second task", "Second description", IN_PROGRESS, NOVEMBER_2026)
+        );
+
+        List<TaskResponse> actualResponses = taskService.getAllTasks();
+
+        assertEquals(expectedResponses, actualResponses);
     }
 
     @Test
-    void getTaskById_mapsTaskToTaskResponse() {
+    void getAllTasks_tasksDoNotExist_returnsEmptyList() {
+        when(taskRepository.findAll()).thenReturn(List.of());
+
+        List<TaskResponse> actualResponses = taskService.getAllTasks();
+
+        assertTrue(actualResponses.isEmpty());
+    }
+
+    @Test
+    void getTaskById_taskExists_mapsTaskToTaskResponse() {
         when(taskRepository.findById(1L)).thenReturn(Optional.of(
                 new Task(1L, "First task", "First description", TODO, OCTOBER_2026))
         );
 
-        TaskResponse response = taskService.getTaskById(1L).orElseThrow();
+        TaskResponse actualResponse = taskService.getTaskById(1L).orElseThrow();
 
-        assertEquals(
-                new TaskResponse(1L, "First task", "First description", TODO, OCTOBER_2026), response
-        );
+        TaskResponse expectedResponse = new TaskResponse(1L, "First task", "First description", TODO, OCTOBER_2026);
+        assertEquals(expectedResponse, actualResponse);
+    }
+
+    @Test
+    void getTaskById_taskDoesNotExist_returnsEmptyOptional() {
+        when(taskRepository.findById(1L)).thenReturn(Optional.empty());
+
+        Optional<TaskResponse> actualResponse = taskService.getTaskById(1L);
+
+        assertTrue(actualResponse.isEmpty());
     }
 
     @Test
     void createTask_mapsRequestAndReturnsSavedTask() {
         CreateTaskRequest request = new CreateTaskRequest("New task", "New task description", COMPLETED, OCTOBER_2026);
-        Task savedTask = new Task(1L, "New task", "New task description", COMPLETED, OCTOBER_2026);
-        when(taskRepository.save(any(Task.class))).thenReturn(savedTask);
+        Task task = new Task(1L, "New task", "New task description", COMPLETED, OCTOBER_2026);
+        when(taskRepository.save(any(Task.class))).thenReturn(task);
 
-        TaskResponse response = taskService.createTask(request);
+        TaskResponse actualResponse = taskService.createTask(request);
 
         ArgumentCaptor<Task> taskCaptor = ArgumentCaptor.forClass(Task.class);
         verify(taskRepository).save(taskCaptor.capture());
@@ -76,7 +93,8 @@ class TaskServiceTests {
         assertEquals("New task description", taskToSave.getDescription());
         assertEquals(COMPLETED, taskToSave.getStatus());
         assertEquals(OCTOBER_2026, taskToSave.getDeadline());
-        assertEquals(new TaskResponse(1L, "New task", "New task description", COMPLETED, OCTOBER_2026), response);
+        TaskResponse expectedResponse = new TaskResponse(1L, "New task", "New task description", COMPLETED, OCTOBER_2026);
+        assertEquals(expectedResponse, actualResponse);
     }
 
     @Test
@@ -97,5 +115,29 @@ class TaskServiceTests {
 
         assertFalse(result);
         verify(taskRepository, never()).deleteById(1L);
+    }
+
+    @Test
+    void updateTaskStatus_existingTask_updatesStatusAndReturnsResponse() {
+        Task task = new Task(1L, "Existing task", "Existing description", TODO, OCTOBER_2026);
+        when(taskRepository.findById(1L)).thenReturn(Optional.of(task));
+        when(taskRepository.save(any(Task.class))).thenReturn(task);
+
+        Optional<TaskResponse> actualResponse = taskService.updateTaskStatus(1L, IN_PROGRESS);
+
+        TaskResponse expectedResponse = new TaskResponse(1L, "Existing task", "Existing description", IN_PROGRESS, OCTOBER_2026);
+        assertEquals(Optional.of(expectedResponse), actualResponse);
+        assertEquals(IN_PROGRESS, task.getStatus());
+        verify(taskRepository).save(task);
+    }
+
+    @Test
+    void updateTaskStatus_nonExistingTask_returnsEmptyOptional() {
+        when(taskRepository.findById(1L)).thenReturn(Optional.empty());
+
+        Optional<TaskResponse> actualResponse = taskService.updateTaskStatus(1L, IN_PROGRESS);
+
+        assertTrue(actualResponse.isEmpty());
+        verify(taskRepository, never()).save(any(Task.class));
     }
 }

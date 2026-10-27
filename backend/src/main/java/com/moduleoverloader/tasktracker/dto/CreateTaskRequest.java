@@ -14,5 +14,4 @@ public record CreateTaskRequest(
     TaskStatus status,
     @NotNull
     LocalDateTime deadline
-) {
-}
+) {}
