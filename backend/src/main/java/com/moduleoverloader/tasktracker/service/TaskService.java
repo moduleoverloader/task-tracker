@@ -20,7 +20,7 @@ public class TaskService {
     }
 
     public List<TaskResponse> getAllTasks() {
-        return taskRepository.findAll().stream()
+        return taskRepository.findAllByOrderByIdAsc().stream()
                 .map(TaskResponse::fromTaskEntity)
                 .toList();
     }

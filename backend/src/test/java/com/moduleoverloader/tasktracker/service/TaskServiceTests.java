@@ -34,7 +34,7 @@ class TaskServiceTests {
 
     @Test
     void getAllTasks_tasksExist_mapsTasksToTaskResponses() {
-        when(taskRepository.findAll()).thenReturn(List.of(
+        when(taskRepository.findAllByOrderByIdAsc()).thenReturn(List.of(
                 new Task(1L, "First task", "First description", TODO, OCTOBER_2026),
                 new Task(2L, "Second task", "Second description", IN_PROGRESS, NOVEMBER_2026)
         ));
@@ -50,7 +50,7 @@ class TaskServiceTests {
 
     @Test
     void getAllTasks_tasksDoNotExist_returnsEmptyList() {
-        when(taskRepository.findAll()).thenReturn(List.of());
+        when(taskRepository.findAllByOrderByIdAsc()).thenReturn(List.of());
 
         List<TaskResponse> actualResponses = taskService.getAllTasks();
 
