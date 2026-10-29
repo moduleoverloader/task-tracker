@@ -1,0 +1,47 @@
+{% from 'govuk/components/tag/macro.njk' import govukTag %}
+{% from 'govuk/components/summary-list/macro.njk' import govukSummaryList %}
+{% macro taskCard(task) %}
+<article class='govuk-summary-card'>
+  <div class='govuk-summary-card__title-wrapper'>
+    <h2 class='govuk-summary-card__title'>{{ task.title }}</h2>
+    {% if task.status == 'TODO' %}
+    {{ govukTag({
+      text: 'To do',
+      classes: 'govuk-tag--grey'
+    }) }}
+    {% elif task.status == 'IN_PROGRESS' %}
+    {{ govukTag({
+      text: 'In progress',
+      classes: 'govuk-tag--yellow'
+    }) }}
+    {% elif task.status == 'COMPLETED' %}
+    {{ govukTag({
+      text: 'Completed',
+      classes: 'govuk-tag--green'
+    }) }}
+    {% endif %}
+  </div>
+  <div class='govuk-summary-card__content'>
+    {{ govukSummaryList({
+      rows: [
+        {
+          key: {
+            text: 'Description'
+          },
+          value: {
+            text: task.description
+          }
+        },
+        {
+          key: {
+            text: 'Deadline'
+          },
+          value: {
+            text: task.deadline | replace('T', ' at ')
+          }
+        }
+      ]
+    }) }}
+  </div>
+</article>
+{% endmacro %}

@@ -1,0 +1,36 @@
+{% from 'macros/task-card.njk' import taskCard %}
+<!DOCTYPE html>
+<html lang='en' class='govuk-template'>
+  <head>
+    <link rel='stylesheet' href='/govuk/govuk-frontend.min.css'>
+    <meta charset='utf-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Task Tracker</title>
+  </head>
+  <body class='govuk-template__body'>
+    <header class='govuk-header'>
+      <div class='govuk-header__container govuk-width-container'>
+        <div class='govuk-header__logo'>
+          <a href='/' class='govuk-header__link govuk-header__link--homepage'>
+            <span class='govuk-header__logotype'>Task Tracker</span>
+          </a>
+        </div>
+      </div>
+    </header>
+    <div class='govuk-width-container'>
+      <main class='govuk-main-wrapper' id='main-content'>
+        <h1 class='govuk-heading-xl'>Task Tracker</h1>
+        {% if tasks.length %}
+          {% for task in tasks %}
+            {{ taskCard(task) }}
+          {% endfor %}
+        {% else %}
+          <div class='govuk-inset-text'>
+            <p class='govuk-body'>No tasks yet.</p>
+            <p class='govuk-body'>Tasks will appear here when they are created.</p>
+          </div>
+        {% endif %}
+      </main>
+    </div>
+  </body>
+</html>
