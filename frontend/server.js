@@ -20,6 +20,9 @@ nunjucks.configure(
   }
 );
 
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: false }));
+
 app.use(
   '/assets',
   express.static(
@@ -46,6 +49,38 @@ app.get('/', async (req, res) => {
   } catch (error) {
     console.error('Could not load tasks:', error);
     res.status(502).send('Could not load tasks from the backend.');
+  }
+});
+
+app.post('/tasks/:id/status', async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  const validStatuses = ['TODO', 'IN_PROGRESS', 'COMPLETED'];
+
+  if (!validStatuses.includes(status)) {
+    return res.status(400).send('Invalid task status.');
+  }
+
+  try {
+    const response = await fetch(
+      `http://localhost:8080/api/tasks/${id}/status`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status }),
+      }
+    );
+
+    if (!response.ok) {
+      return res.status(response.status).send('Could not update task status.');
+    }
+
+    res.redirect('/');
+  } catch (error) {
+    console.error('Could not update task status:', error);
+    res.status(502).send('Could not update task status.');
   }
 });
 

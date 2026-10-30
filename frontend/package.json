@@ -11,5 +11,8 @@
     "express": "^5.1.0",
     "govuk-frontend": "^6.6.0",
     "nunjucks": "^3.2.4"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
   }
 }

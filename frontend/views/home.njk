@@ -3,6 +3,7 @@
 <html lang='en' class='govuk-template'>
   <head>
     <link rel='stylesheet' href='/govuk/govuk-frontend.min.css'>
+    <link rel='stylesheet' href='/stylesheets/application.css'>
     <meta charset='utf-8'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <title>Task Tracker</title>
@@ -26,8 +27,7 @@
           {% endfor %}
         {% else %}
           <div class='govuk-inset-text'>
-            <p class='govuk-body'>No tasks yet.</p>
-            <p class='govuk-body'>Tasks will appear here when they are created.</p>
+            <p class='govuk-body'>No tasks yet. Tasks will appear here when they are created.</p>
           </div>
         {% endif %}
       </main>

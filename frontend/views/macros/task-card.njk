@@ -1,5 +1,6 @@
 {% from 'govuk/components/tag/macro.njk' import govukTag %}
 {% from 'govuk/components/summary-list/macro.njk' import govukSummaryList %}
+{% from 'govuk/components/select/macro.njk' import govukSelect %}
 {% macro taskCard(task) %}
 <article class='govuk-summary-card'>
   <div class='govuk-summary-card__title-wrapper'>
@@ -42,6 +43,22 @@
         }
       ]
     }) }}
+    <form class='task-card__status-form' action='/tasks/{{ task.id }}/status' method='post'>
+      {{ govukSelect({
+        id: 'status-' + task.id,
+        name: 'status',
+        value: task.status,
+        label: {
+          text: 'Status'
+        },
+        items: [
+          { value: 'TODO', text: 'To do' },
+          { value: 'IN_PROGRESS', text: 'In progress' },
+          { value: 'COMPLETED', text: 'Completed' }
+        ]
+      }) }}
+      <button class='govuk-button' type='submit'>Update</button>
+    </form>
   </div>
 </article>
 {% endmacro %}
