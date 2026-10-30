@@ -84,6 +84,29 @@ app.post('/tasks/:id/status', async (req, res) => {
   }
 });
 
+app.post('/tasks/:id/delete', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const response = await fetch(`http://localhost:8080/api/tasks/${id}`, {
+      method: 'DELETE',
+    });
+
+    if (response.status === 404) {
+      return res.status(404).send('Task not found.');
+    }
+
+    if (!response.ok) {
+      return res.status(response.status).send('Could not delete task.');
+    }
+
+    res.redirect('/');
+  } catch (error) {
+    console.error('Could not delete task:', error);
+    res.status(502).send('Could not delete task.');
+  }
+});
+
 if (require.main === module) {
   app.listen(port, () => {
     console.log(`Frontend listening on http://localhost:${port}`);

@@ -14,7 +14,7 @@ const nunjucksEnvironment = new nunjucks.Environment(
   { autoescape: true }
 );
 
-let task = {
+const task = {
   id: 1,
   title: 'Walk the dog',
   description: 'Take Maisy to the woods',
@@ -52,8 +52,7 @@ describe('task card', () => {
     });
 
     it('should set status value correctly for to do task', () => {
-      task.status = 'TODO';
-      const taskCard = renderTaskCard(task);
+      const taskCard = renderTaskCard({ ...task, status: 'TODO' });
       const cardStatus = taskCard.querySelector('.govuk-tag').textContent.trim()
 
       assert.equal(
@@ -63,8 +62,7 @@ describe('task card', () => {
     });
 
     it('should set status value correctly for in progress task', () => {
-      task.status = 'IN_PROGRESS';
-      const taskCard = renderTaskCard(task);
+      const taskCard = renderTaskCard({ ...task, status: 'IN_PROGRESS' });
       const cardStatus = taskCard.querySelector('.govuk-tag').textContent.trim()
 
       assert.equal(
@@ -74,8 +72,7 @@ describe('task card', () => {
     });
 
     it('should set status value correctly for completed task', () => {
-      task.status = 'COMPLETED';
-      const taskCard = renderTaskCard(task);
+      const taskCard = renderTaskCard({ ...task, status: 'COMPLETED' });
       const cardStatus = taskCard.querySelector('.govuk-tag').textContent.trim()
 
       assert.equal(
@@ -105,7 +102,7 @@ describe('task card', () => {
         assert.equal(statusSelect.value, task.status);
       });
     });
-    describe('form submittion', () => {
+    describe('form submission', () => {
       it('should include the selected status in the update form', () => {
           const taskCard = renderTaskCard(task);
           const form = taskCard.querySelector('form');
@@ -120,6 +117,28 @@ describe('task card', () => {
           const formData = new taskCard.defaultView.FormData(form);
           assert.equal(formData.get('status'), 'TODO');
       });
+    });
+  });
+  describe('delete button', () => {
+    it('should be rendered correctly', () => {
+      const taskCard = renderTaskCard(task);
+      const deleteForm = taskCard.querySelector(
+        `form[action="/tasks/${task.id}/delete"]`
+      );
+
+      const deleteButtonText = deleteForm.querySelector('button[type="submit"]').textContent.trim();
+      assert.equal(
+        deleteButtonText,
+        'Delete task'
+      );
+    });
+    it('should submit a delete request for the task', () => {
+      const taskCard = renderTaskCard(task);
+      const deleteForm = taskCard.querySelector(
+        `form[action="/tasks/${task.id}/delete"]`
+      );
+
+      assert.equal(deleteForm.getAttribute('method'), 'post');
     });
   });
 });

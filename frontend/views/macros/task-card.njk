@@ -43,22 +43,32 @@
         }
       ]
     }) }}
-    <form class='task-card__status-form' action='/tasks/{{ task.id }}/status' method='post'>
-      {{ govukSelect({
-        id: 'status-' + task.id,
-        name: 'status',
-        value: task.status,
-        label: {
-          text: 'Status'
-        },
-        items: [
-          { value: 'TODO', text: 'To do' },
-          { value: 'IN_PROGRESS', text: 'In progress' },
-          { value: 'COMPLETED', text: 'Completed' }
-        ]
-      }) }}
-      <button class='govuk-button' type='submit'>Update</button>
-    </form>
+
+    <div class='task-card__actions'>
+      <form class='task-card__status-form' action='/tasks/{{ task.id }}/status' method='post'>
+        {{ govukSelect({
+          id: 'status-' + task.id,
+          name: 'status',
+          value: task.status,
+          label: { text: 'Status' },
+          items: [
+            { value: 'TODO', text: 'To do' },
+            { value: 'IN_PROGRESS', text: 'In progress' },
+            { value: 'COMPLETED', text: 'Completed' }
+          ]
+        }) }}
+        <button class='govuk-button' type='submit'>Update</button>
+      </form>
+      <form
+        action='/tasks/{{ task.id }}/delete'
+        method='post'
+        onsubmit='return confirm("Are you sure you want to delete this task?")'
+      >
+        <button class='govuk-button govuk-button--warning' type='submit'>
+          Delete task
+        </button>
+      </form>
+    </div>
   </div>
 </article>
 {% endmacro %}
