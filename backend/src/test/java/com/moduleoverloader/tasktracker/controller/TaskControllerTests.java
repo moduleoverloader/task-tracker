@@ -154,6 +154,23 @@ public class TaskControllerTests {
     }
 
     @Test
+    void createTask_descriptionLongerThan255Characters_shouldReturnBadRequest() throws Exception {
+        String longDescription = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.";
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "title": "New task",
+                      "description": "%s",
+                      "status": "TODO",
+                      "deadline": "2026-10-01T09:00:00"
+                    }
+                    """.formatted(longDescription)))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(taskService);
+    }
+
+    @Test
     void createTask_missingTitle_shouldReturnBadRequest() throws Exception {
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -185,6 +202,23 @@ public class TaskControllerTests {
     }
 
     @Test
+    void createTask_titleLongerThan50Characters_shouldReturnBadRequest() throws Exception {
+        String longTitle = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "title": "%s",
+                      "description": "New task description",
+                      "status": "TODO",
+                      "deadline": "2026-10-01T09:00:00"
+                    }
+                    """.formatted(longTitle)))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(taskService);
+    }
+
+    @Test
     void createTask_missingStatus_shouldReturnBadRequest() throws Exception {
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -208,6 +242,38 @@ public class TaskControllerTests {
                       "title": "New task",
                       "description": "New task description",
                       "status": "TODO"
+                    }
+                    """))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(taskService);
+    }
+
+    @Test
+    void createTask_deadlineBefore2000_shouldReturnBadRequest() throws Exception {
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "title": "New task",
+                      "description": "New task description",
+                      "status": "TODO",
+                      "deadline": "1999-12-31T23:59:59"
+                    }
+                    """))
+                .andExpect(status().isBadRequest());
+        verifyNoInteractions(taskService);
+    }
+
+    @Test
+    void createTask_deadlineAfter2099_shouldReturnBadRequest() throws Exception {
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "title": "New task",
+                      "description": "New task description",
+                      "status": "TODO",
+                      "deadline": "2100-01-01T00:00:00"
                     }
                     """))
                 .andExpect(status().isBadRequest());

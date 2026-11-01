@@ -126,12 +126,12 @@ No path parameters are required for this endpoint
 
 Send a JSON object with the following fields:
 
-| Field       | Type     | Required   | Validation                                              |
-|-------------|----------|------------|---------------------------------------------------------|
-| title       | `String` | Yes        | Must not be null or blank                               |
-| description | `String` | No         | Task description                                        |
-| status      | `String` | Yes        | Must be `TODO`, `IN_PROGRESS`, or `COMPLETED`           |
-| deadline    | `String` | Yes        | ISO date-time format, for example `2026-10-30T17:00:00` |
+| Field       | Type     | Required   | Validation                                                                                                                         |
+|-------------|----------|------------|------------------------------------------------------------------------------------------------------------------------------------|
+| title       | `String` | Yes        | Must not be blank. Max character limit of 50                                                                                       |
+| description | `String` | No         | Max character limit of 255                                                                                                         |
+| status      | `String` | Yes        | Must be `TODO`, `IN_PROGRESS`, or `COMPLETED`                                                                                      |
+| deadline    | `String` | Yes        | ISO date-time format, for example `2026-10-30T17:00:00`. Rejects dates before `2000-01-01T00:00:00` or after `2099-12-31T23:59:59` |
 
 The deadline is a local date-time and does not include a timezone or UTC offset
 
