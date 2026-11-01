@@ -11,3 +11,7 @@
   align-items: flex-end;
   gap: 10px;
 }
+
+.govuk-summary-card .govuk-summary-list__key {
+  width: 20%;
+}

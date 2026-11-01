@@ -56,4 +56,11 @@ describe('home page', () => {
       0
     );
   });
+
+  it('should show the create task form', () => {
+    const document = renderHome([]);
+
+    assert.ok(document.querySelector('form[action="/tasks"]'));
+  });
+
 });

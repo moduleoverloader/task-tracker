@@ -107,6 +107,47 @@ app.post('/tasks/:id/delete', async (req, res) => {
   }
 });
 
+app.post('/tasks', async (req, res) => {
+  const { title, description, status, deadline } = req.body;
+  const validStatuses = ['TODO', 'IN_PROGRESS', 'COMPLETED'];
+
+  if (!title?.trim() || !validStatuses.includes(status) || !deadline) {
+    return res.status(400).send('Title, status, and deadline are required.');
+  }
+
+  if (title.trim().length > 50) {
+    return res.status(400).send('Title must be 50 characters or fewer.');
+  }
+
+  if (description && description.length > 255) {
+    return res.status(400).send('Description must be 255 characters or fewer.');
+  }
+
+  try {
+    const response = await fetch('http://localhost:8080/api/tasks', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: title.trim(),
+        description: description || '',
+        status,
+        deadline,
+      }),
+    });
+
+    if (!response.ok) {
+      return res.status(response.status).send('Could not create task.');
+    }
+
+    res.redirect('/');
+  } catch (error) {
+    console.error('Could not create task:', error);
+    res.status(502).send('Could not create task.');
+  }
+});
+
 if (require.main === module) {
   app.listen(port, () => {
     console.log(`Frontend listening on http://localhost:${port}`);

@@ -1,4 +1,5 @@
 {% from 'macros/task-card.njk' import taskCard %}
+{% from 'macros/create-task-form.njk' import createTaskForm %}
 <!DOCTYPE html>
 <html lang='en' class='govuk-template'>
   <head>
@@ -21,6 +22,7 @@
     <div class='govuk-width-container'>
       <main class='govuk-main-wrapper' id='main-content'>
         <h1 class='govuk-heading-xl'>Task Tracker</h1>
+        {{ createTaskForm() }}
         {% if tasks.length %}
           {% for task in tasks %}
             {{ taskCard(task) }}
@@ -32,5 +34,21 @@
         {% endif %}
       </main>
     </div>
+    <script>
+      const titleField = document.querySelector('#task-title');
+      const titleCount = document.querySelector('#task-title-count');
+      const descriptionField = document.querySelector('#task-description');
+      const descriptionCount = document.querySelector('#task-description-count');
+
+      titleField.addEventListener('input', () => {
+        const remaining = 50 - titleField.value.length;
+        titleCount.textContent = `You have ${remaining} characters remaining`;
+      });
+
+      descriptionField.addEventListener('input', () => {
+        const remaining = 255 - descriptionField.value.length;
+        descriptionCount.textContent = `You have ${remaining} characters remaining`;
+      });
+    </script>
   </body>
 </html>

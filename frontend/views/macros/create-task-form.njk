@@ -1,0 +1,81 @@
+{% from 'govuk/components/input/macro.njk' import govukInput %}
+{% from 'govuk/components/select/macro.njk' import govukSelect %}
+{% from 'govuk/components/button/macro.njk' import govukButton %}
+
+{% macro createTaskForm() %}
+<form action='/tasks' method='post'>
+  <div class='govuk-form-group'>
+    <label class='govuk-label' for='task-title'>Title</label>
+    <div class='govuk-hint govuk-character-count__message' id='task-title-count' aria-live='polite'>
+      You have 50 characters remaining
+    </div>
+    <input
+      class='govuk-input'
+      id='task-title'
+      name='title'
+      type='text'
+      required
+      maxlength='50'
+    >
+  </div>
+
+  <div class='govuk-form-group'>
+    <label class='govuk-label' for='task-description'>Description</label>
+    <div class='govuk-hint govuk-character-count__message' id='task-description-count' aria-live='polite'>
+      You have 255 characters remaining
+    </div>
+    <textarea
+      class='govuk-textarea'
+      id='task-description'
+      name='description'
+      rows='3'
+      maxlength='255'
+    ></textarea>
+  </div>
+
+  {{ govukInput({
+    id: 'task-deadline',
+    name: 'deadline',
+    type: 'datetime-local',
+    label: { 
+      text: 'Deadline' 
+    },
+    attributes: { 
+      min: '2000-01-01T00:00',
+      max: '2099-12-31T23:59',
+      required: true 
+    }
+  }) }}
+
+  {{ govukSelect({
+    id: 'task-status',
+    name: 'status',
+    label: { text: 'Status' },
+    attributes: { 
+      required: true 
+    },
+    items: [
+      { 
+        value: '', 
+        text: 'Choose a status', 
+        selected: true, 
+        disabled: true 
+      },
+      { 
+        value: 'TODO', 
+        text: 'To do' },
+      { 
+        value: 'IN_PROGRESS', 
+        text: 'In progress' },
+      { 
+        value: 'COMPLETED', 
+        text: 'Completed' }
+    ]
+  }) }}
+
+  {{ govukButton({
+    text: 'Create task',
+    type: 'submit'
+  }) }}
+</form>
+{% endmacro %}

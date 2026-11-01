@@ -32,8 +32,8 @@ function renderTaskCard(task) {
 }
 
 describe('task card', () => {
-  describe('field values', () => {
-    it('should set title value correctly', () => {
+  describe('title', () => {
+    it('should set value correctly', () => {
       const taskCard = renderTaskCard(task);
       const cardTitle = taskCard.querySelector('.govuk-summary-card__title').textContent.trim()
 
@@ -42,7 +42,9 @@ describe('task card', () => {
         task.title
       );
     });
-    it('should set description value correctly', () => {
+  });
+  describe('description', () => {
+    it('should set value correctly', () => {
       const taskCard = renderTaskCard(task);
       const descriptionRow = [...taskCard.querySelectorAll('.govuk-summary-list__row')]
         .find(row => row.querySelector('dt').textContent.trim() === 'Description');
@@ -50,8 +52,9 @@ describe('task card', () => {
 
       assert.equal(cardDescription, task.description);
     });
-
-    it('should set status value correctly for to do task', () => {
+  });
+  describe('status', () => {
+    it('should set value correctly for to do task', () => {
       const taskCard = renderTaskCard({ ...task, status: 'TODO' });
       const cardStatus = taskCard.querySelector('.govuk-tag').textContent.trim()
 
@@ -60,8 +63,7 @@ describe('task card', () => {
         'To do'
       );
     });
-
-    it('should set status value correctly for in progress task', () => {
+    it('should set value correctly for in progress task', () => {
       const taskCard = renderTaskCard({ ...task, status: 'IN_PROGRESS' });
       const cardStatus = taskCard.querySelector('.govuk-tag').textContent.trim()
 
@@ -70,8 +72,7 @@ describe('task card', () => {
         'In progress'
       );
     });
-
-    it('should set status value correctly for completed task', () => {
+    it('should set value correctly for completed task', () => {
       const taskCard = renderTaskCard({ ...task, status: 'COMPLETED' });
       const cardStatus = taskCard.querySelector('.govuk-tag').textContent.trim()
 
@@ -80,8 +81,9 @@ describe('task card', () => {
         'Completed'
       );
     });
-
-    it('should set deadline value correctly', () => {
+  });
+  describe('deadline', () => {
+    it('should set value correctly', () => {
       const taskCard = renderTaskCard(task);
       const deadlineRow = [...taskCard.querySelectorAll('.govuk-summary-list__row')]
         .find(row => row.querySelector('dt').textContent.trim() === 'Deadline');
@@ -100,6 +102,17 @@ describe('task card', () => {
         const statusSelect = taskCard.getElementById(`status-${task.id}`);
 
         assert.equal(statusSelect.value, task.status);
+      });
+    });
+    describe('update button', () => {
+      it('should render with the correct label', () => {
+        const taskCard = renderTaskCard(task);
+        const updateForm = taskCard.querySelector(
+          `form[action="/tasks/${task.id}/status"]`
+        );
+        const updateButton = updateForm.querySelector('button[type="submit"]');
+
+        assert.equal(updateButton.textContent.trim(), 'Update');
       });
     });
     describe('form submission', () => {
