@@ -4,19 +4,29 @@ DTS Developer Technical Test Submission
 ---
 # Technologies
 
+*Backend:*
 * Java 21  
 * Spring Boot
-* Docker
-* Spring Data JPA  
-* Postgres
+* PostgreSQL
 * JUnit 5  
-* Mockito  
+* Mockito 
+
+*Frontend:*
+* Node.js
+* Express
+* Nunjucks
+* GOV.UK Frontend
+
+*Infrastructure:*
+* Docker and Docker Compose
+
 
 ---
 # Startup instructions
 
 1. Ensure Docker Desktop is running
 2. Navigate to root of project and run `docker compose up --build`
+3. The frontend will be available at `http://localhost:3000`
 
 ---
 

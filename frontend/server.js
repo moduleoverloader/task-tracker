@@ -6,6 +6,7 @@ const path = require('node:path');
 
 const app = express();
 const port = process.env.PORT || 3000;
+const apiBaseUrl = process.env.API_BASE_URL || 'http://localhost:8080';
 
 app.set('view engine', 'njk');
 
@@ -39,7 +40,7 @@ app.use(
 
 app.get('/', async (req, res) => {
   try {
-    const tasksResponse = await fetch('http://localhost:8080/api/tasks');
+    const tasksResponse = await fetch(`${apiBaseUrl}/api/tasks`);
 
     if (!tasksResponse.ok) {
       throw new Error(`Backend returned ${tasksResponse.status}`);
@@ -63,7 +64,7 @@ app.post('/tasks/:id/status', async (req, res) => {
 
   try {
     const response = await fetch(
-      `http://localhost:8080/api/tasks/${id}/status`,
+      `${apiBaseUrl}/api/tasks/${id}/status`,
       {
         method: 'PATCH',
         headers: {
@@ -88,7 +89,7 @@ app.post('/tasks/:id/delete', async (req, res) => {
   const { id } = req.params;
 
   try {
-    const response = await fetch(`http://localhost:8080/api/tasks/${id}`, {
+    const response = await fetch(`${apiBaseUrl}/api/tasks/${id}`, {
       method: 'DELETE',
     });
 
@@ -124,7 +125,7 @@ app.post('/tasks', async (req, res) => {
   }
 
   try {
-    const response = await fetch('http://localhost:8080/api/tasks', {
+    const response = await fetch(`${apiBaseUrl}/api/tasks`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
