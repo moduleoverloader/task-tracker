@@ -34,7 +34,7 @@ public class TaskService {
         Task task = new Task();
         task.setTitle(request.title());
         task.setDescription(request.description());
-        task.setStatus(request.status());
+        task.setStatus(TaskStatus.valueOf(request.status()));
         task.setDeadline(request.deadline());
 
         Task savedTask = taskRepository.save(task);

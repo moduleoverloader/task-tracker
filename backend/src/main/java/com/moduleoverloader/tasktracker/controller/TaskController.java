@@ -3,6 +3,7 @@ package com.moduleoverloader.tasktracker.controller;
 import com.moduleoverloader.tasktracker.dto.CreateTaskRequest;
 import com.moduleoverloader.tasktracker.dto.TaskResponse;
 import com.moduleoverloader.tasktracker.dto.UpdateTaskStatusRequest;
+import com.moduleoverloader.tasktracker.enums.TaskStatus;
 import com.moduleoverloader.tasktracker.service.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -56,7 +57,7 @@ public class TaskController {
     public ResponseEntity<TaskResponse> updateTaskStatus(
             @PathVariable Long id,
             @Valid @RequestBody UpdateTaskStatusRequest request) {
-        return taskService.updateTaskStatus(id, request.status())
+        return taskService.updateTaskStatus(id, TaskStatus.valueOf(request.status()))
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

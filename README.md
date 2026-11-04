@@ -27,6 +27,7 @@ DTS Developer Technical Test Submission
 1. Ensure Docker Desktop is running
 2. Navigate to root of project and run `docker compose up --build`
 3. The frontend will be available at `http://localhost:3000`
+4. the backend will be available at `http://localhost:8080`
 
 ---
 
@@ -136,14 +137,13 @@ No path parameters are required for this endpoint
 
 Send a JSON object with the following fields:
 
-| Field       | Type     | Required   | Validation                                                                                                                         |
-|-------------|----------|------------|------------------------------------------------------------------------------------------------------------------------------------|
-| title       | `String` | Yes        | Must not be blank. Max character limit of 50                                                                                       |
-| description | `String` | No         | Max character limit of 255                                                                                                         |
-| status      | `String` | Yes        | Must be `TODO`, `IN_PROGRESS`, or `COMPLETED`                                                                                      |
-| deadline    | `String` | Yes        | ISO date-time format, for example `2026-10-30T17:00:00`. Rejects dates before `2000-01-01T00:00:00` or after `2099-12-31T23:59:59` |
+| Field       | Type     | Required   | Validation                                                                                          |
+|-------------|----------|------------|-----------------------------------------------------------------------------------------------------|
+| title       | `String` | Yes        | Must not be blank. Maximum 50 characters                                                            |
+| description | `String` | No         | Maximum 255 characters                                                                              |
+| status      | `String` | Yes        | Must be `TODO`, `IN_PROGRESS`, or `COMPLETED`                                                       |
+| deadline    | `String` | Yes        | Must be ISO date-time format, for example `2026-10-30T17:00:00`. Year must be between 2000 and 2099 |
 
-The deadline is a local date-time and does not include a timezone or UTC offset
 
 
 ### Sample request body
@@ -169,13 +169,131 @@ The deadline is a local date-time and does not include a timezone or UTC offset
 }
 ```
 
-`400 Bad Request` - The request is invalid, such as a missing required field, a blank title, an invalid status, or a malformed deadline
+`400 Bad Request` — The title is missing or blank
 ```json
 {
-  "timestamp": "2026-10-27T14:27:39.323Z",
-  "status": 400,
-  "error": "Bad Request",
-  "path": "/api/tasks"
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "field": "title",
+      "message": "Title is required and must not be blank"
+    }
+  ]
+}
+```
+
+`400 Bad Request` — The title is longer than 50 characters
+```json
+{
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "field": "title",
+      "message": "Title must be 50 characters or fewer"
+    }
+  ]
+}
+```
+
+`400 Bad Request` — The description is longer than 255 characters
+```json
+{
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "field": "description",
+      "message": "Description must be 255 characters or fewer"
+    }
+  ]
+}
+```
+
+`400 Bad Request` — The status is missing
+```json
+{
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "field": "status",
+      "message": "Status is required"
+    }
+  ]
+}
+```
+
+`400 Bad Request` — The status is present but not one of the valid values: `TODO`, `IN_PROGRESS`, or `COMPLETED`
+```json
+{
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "field": "status",
+      "message": "Status must be TODO, IN_PROGRESS, or COMPLETED"
+    }
+  ]
+}
+```
+
+`400 Bad Request` — The deadline is missing
+```json
+{
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "field": "deadline",
+      "message": "Deadline is required"
+    }
+  ]
+}
+```
+
+`400 Bad Request` — The deadline is out of range before 2000 or after 2099
+```json
+{
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "field": "deadline",
+      "message": "Deadline must be between 2000 and 2099"
+    }
+  ]
+}
+```
+
+`400 Bad Request` — Multiple fields are invalid
+```json
+{
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "field": "title",
+      "message": "Title is required and must not be blank"
+    },
+    {
+      "field": "description",
+      "message": "Description must be 255 characters or fewer"
+    },
+    {
+      "field": "deadline",
+      "message": "Deadline is required"
+    },
+    {
+      "field": "status",
+      "message": "Status must be TODO, IN_PROGRESS, or COMPLETED"
+    }
+  ]
+}
+```
+`404 Not Found` — the JSON body is malformed
+```json
+{
+  "message": "Invalid request body",
+  "errors": [
+    {
+      "field": "body",
+      "message": "Request body is malformed or contains a value with an invalid format."
+    }
+  ]
 }
 ```
 
@@ -244,15 +362,41 @@ Request is sent with a JSON body containing the task details
 }
 ```
 
-`400 Bad Request` - The request is invalid due to an invalid status
+`400 Bad Request` — The status is missing
 ```json
 {
-  "timestamp": "2026-10-27T14:27:39.323Z",
-  "status": 400,
-  "error": "Bad Request",
-  "path": "/api/tasks/1/status"
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "field": "status",
+      "message": "Status is required"
+    }
+  ]
 }
 ```
 
-`404 Not Found` — The task with the specified `id` does not exist. No response body is returned
+`400 Bad Request` — The status is present but not one of the valid values: `TODO`, `IN_PROGRESS`, or `COMPLETED`
+```json
+{
+  "message": "Request validation failed",
+  "errors": [
+    {
+      "field": "status",
+      "message": "Status must be TODO, IN_PROGRESS, or COMPLETED"
+    }
+  ]
+}
+```
 
+`404 Not Found` — the JSON body is malformed
+```json
+{
+  "message": "Invalid request body",
+  "errors": [
+    {
+      "field": "body",
+      "message": "Request body is malformed or contains a value with an invalid format."
+    }
+  ]
+}
+```

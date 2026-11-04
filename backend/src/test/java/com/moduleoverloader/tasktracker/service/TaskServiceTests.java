@@ -80,7 +80,7 @@ class TaskServiceTests {
 
     @Test
     void createTask_mapsRequestAndReturnsSavedTask() {
-        CreateTaskRequest request = new CreateTaskRequest("New task", "New task description", COMPLETED, OCTOBER_2026);
+        CreateTaskRequest request = new CreateTaskRequest("New task", "New task description", "COMPLETED", OCTOBER_2026);
         Task task = new Task(1L, "New task", "New task description", COMPLETED, OCTOBER_2026);
         when(taskRepository.save(any(Task.class))).thenReturn(task);
 

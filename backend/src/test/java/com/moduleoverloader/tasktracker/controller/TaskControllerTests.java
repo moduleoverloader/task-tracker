@@ -17,6 +17,7 @@ import java.util.Optional;
 
 import static com.moduleoverloader.tasktracker.enums.TaskStatus.IN_PROGRESS;
 import static com.moduleoverloader.tasktracker.enums.TaskStatus.TODO;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -123,7 +124,7 @@ public class TaskControllerTests {
                 .andExpect(jsonPath("$.description").value("New task description"))
                 .andExpect(jsonPath("$.status").value("TODO"))
                 .andExpect(jsonPath("$.deadline").value("2026-10-01T09:00:00"));
-        CreateTaskRequest expectedRequest = new CreateTaskRequest("New task", "New task description", TODO, OCTOBER_2026);
+        CreateTaskRequest expectedRequest = new CreateTaskRequest("New task", "New task description", "TODO", OCTOBER_2026);
         verify(taskService).createTask(expectedRequest);
     }
 
@@ -149,12 +150,12 @@ public class TaskControllerTests {
                 .andExpect(jsonPath("$.description").doesNotExist())
                 .andExpect(jsonPath("$.status").value("TODO"))
                 .andExpect(jsonPath("$.deadline").value("2026-10-01T09:00:00"));
-        CreateTaskRequest expectedRequest = new CreateTaskRequest("New task", null, TODO, OCTOBER_2026);
+        CreateTaskRequest expectedRequest = new CreateTaskRequest("New task", null, "TODO", OCTOBER_2026);
         verify(taskService).createTask(expectedRequest);
     }
 
     @Test
-    void createTask_descriptionLongerThan255Characters_shouldReturnBadRequest() throws Exception {
+    void createTask_descriptionLongerThan255Characters_shouldReturnBadRequestAndError() throws Exception {
         String longDescription = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.";
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -166,12 +167,15 @@ public class TaskControllerTests {
                       "deadline": "2026-10-01T09:00:00"
                     }
                     """.formatted(longDescription)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("description"))
+                .andExpect(jsonPath("$.errors[0].message").value("Description must be 255 characters or fewer"));
         verifyNoInteractions(taskService);
     }
 
     @Test
-    void createTask_missingTitle_shouldReturnBadRequest() throws Exception {
+    void createTask_missingTitle_shouldReturnBadRequestAndError() throws Exception {
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -181,12 +185,15 @@ public class TaskControllerTests {
                       "deadline": "2026-10-01T09:00:00"
                     }
                     """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("title"))
+                .andExpect(jsonPath("$.errors[0].message").value("Title is required and must not be blank"));
         verifyNoInteractions(taskService);
     }
 
     @Test
-    void createTask_blankTitle_shouldReturnBadRequest() throws Exception {
+    void createTask_blankTitle_shouldReturnBadRequestAndError() throws Exception {
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -197,12 +204,15 @@ public class TaskControllerTests {
                       "deadline": "2026-10-01T09:00:00"
                     }
                     """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("title"))
+                .andExpect(jsonPath("$.errors[0].message").value("Title is required and must not be blank"));
         verifyNoInteractions(taskService);
     }
 
     @Test
-    void createTask_titleLongerThan50Characters_shouldReturnBadRequest() throws Exception {
+    void createTask_titleLongerThan50Characters_shouldReturnBadRequestAndError() throws Exception {
         String longTitle = "Lorem ipsum dolor sit amet, consectetur adipiscing elit";
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -214,12 +224,15 @@ public class TaskControllerTests {
                       "deadline": "2026-10-01T09:00:00"
                     }
                     """.formatted(longTitle)))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("title"))
+                .andExpect(jsonPath("$.errors[0].message").value("Title must be 50 characters or fewer"));
         verifyNoInteractions(taskService);
     }
 
     @Test
-    void createTask_missingStatus_shouldReturnBadRequest() throws Exception {
+    void createTask_missingStatus_shouldReturnBadRequestAndError() throws Exception {
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -229,12 +242,53 @@ public class TaskControllerTests {
                       "deadline": "2026-10-01T09:00:00"
                     }
                     """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("status"))
+                .andExpect(jsonPath("$.errors[0].message").value("Status is required"));
         verifyNoInteractions(taskService);
     }
 
     @Test
-    void createTask_missingDeadline_shouldReturnBadRequest() throws Exception {
+    void createTask_invalidStatus_shouldReturnBadRequestAndError() throws Exception {
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "title": "New task",
+                      "description": "New task description",
+                      "status": "INVALID_STATUS",
+                      "deadline": "2026-10-01T09:00:00"
+                    }
+                    """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("status"))
+                .andExpect(jsonPath("$.errors[0].message").value("Status must be TODO, IN_PROGRESS, or COMPLETED"));
+        verifyNoInteractions(taskService);
+    }
+
+    @Test
+    void createTask_invalidDeadline_shouldReturnBadRequestAndError() throws Exception {
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "title": "New task",
+                      "description": "New task description",
+                      "status": "TODO",
+                      "deadline": "invalid date"
+                    }
+                    """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Invalid request body"))
+                .andExpect(jsonPath("$.errors[0].field").value("body"))
+                .andExpect(jsonPath("$.errors[0].message").value("Request body is malformed or contains a value with an invalid format."));
+        verifyNoInteractions(taskService);
+    }
+
+    @Test
+    void createTask_missingDeadline_shouldReturnBadRequestAndError() throws Exception {
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -244,12 +298,15 @@ public class TaskControllerTests {
                       "status": "TODO"
                     }
                     """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("deadline"))
+                .andExpect(jsonPath("$.errors[0].message").value("Deadline is required"));
         verifyNoInteractions(taskService);
     }
 
     @Test
-    void createTask_deadlineBefore2000_shouldReturnBadRequest() throws Exception {
+    void createTask_deadlineBefore2000_shouldReturnBadRequestAndError() throws Exception {
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -260,12 +317,15 @@ public class TaskControllerTests {
                       "deadline": "1999-12-31T23:59:59"
                     }
                     """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("deadline"))
+                .andExpect(jsonPath("$.errors[0].message").value("Deadline must be between 2000 and 2099"));
         verifyNoInteractions(taskService);
     }
 
     @Test
-    void createTask_deadlineAfter2099_shouldReturnBadRequest() throws Exception {
+    void createTask_deadlineAfter2099_shouldReturnBadRequestAndError() throws Exception {
         mockMvc.perform(post("/api/tasks")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -276,7 +336,35 @@ public class TaskControllerTests {
                       "deadline": "2100-01-01T00:00:00"
                     }
                     """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("deadline"))
+                .andExpect(jsonPath("$.errors[0].message").value("Deadline must be between 2000 and 2099"));
+        verifyNoInteractions(taskService);
+    }
+
+    @Test
+    void createTask_invalidTitleAndDescriptionAndDeadlineAndStatus_shouldReturnBadRequestAndErrors() throws Exception {
+        mockMvc.perform(post("/api/tasks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                    {
+                      "title": "",
+                      "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.",
+                      "status": "INVALID_STATUS",
+                      "deadline": "2100-01-01T00:00:00"
+                    }
+                    """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors.length()").value(4))
+                .andExpect(jsonPath("$.errors[*].field").value(containsInAnyOrder("title", "description", "deadline", "status")))
+                .andExpect(jsonPath("$.errors[*].message").value(containsInAnyOrder(
+                        "Title is required and must not be blank",
+                        "Description must be 255 characters or fewer",
+                        "Deadline must be between 2000 and 2099",
+                        "Status must be TODO, IN_PROGRESS, or COMPLETED"
+                )));
         verifyNoInteractions(taskService);
     }
 
@@ -338,11 +426,14 @@ public class TaskControllerTests {
     }
 
     @Test
-    void updateTaskStatus_missingStatus_shouldReturnBadRequest() throws Exception {
+    void updateTaskStatus_missingStatus_shouldReturnBadRequestAndError() throws Exception {
         mockMvc.perform(MockMvcRequestBuilders.patch("/api/tasks/1/status")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("status"))
+                .andExpect(jsonPath("$.errors[0].message").value("Status is required"));
         verifyNoInteractions(taskService);
     }
 
@@ -355,7 +446,11 @@ public class TaskControllerTests {
                       "status": "INVALID"
                     }
                     """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.errors[0].field").value("status"))
+                .andExpect(jsonPath("$.errors[0].message").value(
+                        "Status must be TODO, IN_PROGRESS, or COMPLETED"));
         verifyNoInteractions(taskService);
     }
 }
